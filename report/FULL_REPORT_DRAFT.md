@@ -1,7 +1,7 @@
 ---
 IEEE-style manuscript draft (paste into Word/LaTeX; polish citations)
 **Required header links — replace before submission**
-- GitHub repository: `TODO`
+- GitHub repository: https://github.com/NAILLAHHHH/pcos-informed-diabetes-women
 - Google Drive folder: `TODO`
 - Presentation video: `TODO`
 ---
@@ -11,7 +11,7 @@ IEEE-style manuscript draft (paste into Word/LaTeX; polish citations)
 **Working title:** PCOS-Informed Multi-Class Diabetes Classification in Women Using BRFSS Health Indicators: A Comparative Study of Traditional Machine Learning and Deep Learning
 
 **Repository / deliverable links (replace before submission):**
-- GitHub repository: `TODO`
+- GitHub repository: https://github.com/NAILLAHHHH/pcos-informed-diabetes-women
 - Google Drive folder: `TODO`
 - Presentation video: `TODO`
 
