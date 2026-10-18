@@ -22,7 +22,7 @@ Raw CSV and model weights are **not** on GitHub — they are on Google Drive.
 | Deliverable | Link |
 |-------------|------|
 | GitHub | https://github.com/NAILLAHHHH/pcos-informed-diabetes-women |
-| Google Drive | `TODO` |
+| Google Drive | https://drive.google.com/drive/folders/1wwxLklvIkzQa_uyzHJl5ItSftO6sIfXJ?usp=drive_link |
 | Video | `TODO` |
 
 ## Setup
