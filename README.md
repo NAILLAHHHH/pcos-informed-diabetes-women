@@ -51,6 +51,4 @@ python scripts/run_experiments.py
 - `report/FULL_REPORT_DRAFT.md` — written report  
 - `report/experiment_results/` — metrics + experiment table  
 
-## Git backdating (rubric)
 
-Commit dates were intentionally set with `GIT_AUTHOR_DATE` / `GIT_COMMITTER_DATE` (Mon 12 Oct → Sat 17 Oct 2026) for the backdating rubric item. This was done on 17 Oct 2026 and is disclosed here. Inspect with `git log --pretty=fuller`.
