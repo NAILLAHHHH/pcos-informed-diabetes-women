@@ -14,13 +14,15 @@ Class prevalence in the women cohort remains heavily skewed toward no diabetes, 
 
 ## C. Preprocessing and Feature Engineering
 
-Missingness in the cleaned indicators release is already limited; we validate required columns at load time and abort if the schema drifts. Features are cast to numeric types for modeling. We construct three transparent composites:
+We begin with an automated **data-quality audit** (`diagnose_data_quality`) that records missingness, dtypes, and unique-value counts for every column, plus BMI quantile and outlier flags. Although the cleaned BRFSS indicators release is largely complete, we still **drop rows with missing targets or required predictors** and **clip BMI** to a plausible survey range \([12, 60]\) to limit extreme coding artifacts while preserving ordinal/binary questionnaire fields. Tukey IQR fences for BMI are reported for transparency even when clinical clipping is the applied transform. All steps are serialized to `report/experiment_results/data_quality_audit.csv` and `cleaning_report.json` for replication.
+
+Features are cast to numeric types for modeling. We construct three transparent composites:
 
 1. **MetabolicBurden** — sum of high blood pressure, high cholesterol, and obesity indicator (\(\mathrm{BMI}\ge 30\)).
 2. **LifestyleRisk** — combination of physical inactivity and scaled general-health score.
 3. **BMI_x_HighBP** — interaction between BMI and hypertension.
 
-These fields are motivated by cardiometabolic patterns frequently discussed in PCOS–diabetes research; they are **not** surrogate PCOS labels. The final feature matrix uses the original indicators plus the three engineered columns (\(d=23\) in the reported runs).
+These fields are motivated by cardiometabolic patterns frequently discussed in PCOS–diabetes research [1]–[5]; they are **not** surrogate PCOS labels. The final feature matrix uses the original indicators plus the three engineered columns (\(d=23\) in the reported runs). An **ablation** comparing logistic regression with and without engineered features is logged in the experiment table to justify retention empirically rather than by narrative alone.
 
 We apply stratified splits: 70% train, 15% validation, 15% test (implemented as a 15% test holdout from the full cohort, then a validation fraction from the remainder), with `random_state=42`. Continuous scaling via `StandardScaler` is fit on the training partition only and applied to validation/test. Tree models can tolerate unscaled inputs, but a shared scaled representation keeps linear models and neural networks comparable; pipelines encapsulate scaling for scikit-learn estimators.
 
@@ -51,6 +53,6 @@ Minibatches are assembled with `tf.data.Dataset.from_tensor_slices`, optional sh
 
 Primary selection metric: **macro-F1**. Secondary metrics: accuracy, macro precision/recall, and **macro one-versus-rest ROC–AUC**. We report confusion matrices for best traditional and best deep models, ROC curves per class, random-forest learning curves (macro-F1 versus training size), and neural training/validation loss–accuracy trajectories. Error analysis stratifies mistakes by true class and examines metabolic-feature means among errors to connect quantitative failures to clinical interpretability.
 
-## G. Reproducibility and Artifact Handling
+## G. Reproducibility, W&B Offline Logs, and Artifact Handling
 
-Code is organized as importable modules under `src/` plus a documented Jupyter notebook and a batch runner (`scripts/run_experiments.py`). Dependencies are pinned in spirit via `requirements.txt`. Raw CSVs and model binaries are gitignored; the assignment’s Google Drive folder stores (i) the zipped raw dataset, (ii) the best traditional model (`.joblib`), and (iii) the best Keras model (`.keras`) with its scaler. Random seeds are fixed where libraries allow (`random_state=42`, Keras seed utility).
+Code is organized as importable modules under `src/` plus a documented Jupyter notebook and a batch runner (`scripts/run_experiments.py`). Dependencies are listed in `requirements.txt` (including `wandb`). Every experimental run is logged with **Weights & Biases in offline mode** (`WANDB_MODE=offline`), writing local run directories under `wandb/` and appending a row to `report/experiment_results/experiment_table.csv` with model name, hyperparameters, split sizes, metrics, and a short observation. TensorBoard-style epoch curves for MLPs are also captured via W&B step logs of train/val loss and accuracy. Raw CSVs and model binaries are gitignored; the Google Drive folder stores the zipped raw dataset and best model weights. Random seeds are fixed (`random_state=42`, Keras seed utility).

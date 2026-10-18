@@ -1,0 +1,16 @@
+{
+  "n_before": 141974,
+  "rows_dropped_missing": 0,
+  "bmi_below_min": 0,
+  "bmi_above_max": 453,
+  "n_after": 141974,
+  "bmi_iqr": {
+    "q1": 23.0,
+    "q3": 31.0,
+    "iqr": 8.0,
+    "fence_low": 11.0,
+    "fence_high": 43.0,
+    "n_below": 0.0,
+    "n_above": 4526.0
+  }
+}

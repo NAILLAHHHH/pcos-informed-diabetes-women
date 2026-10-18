@@ -6,7 +6,11 @@ Figures referenced below are generated in `figures/` by the experimental pipelin
 
 The raw BRFSS-derived table contains 253,680 adults. Restricting to women yields 141,974 respondents. Fig. 1 (`class_balance_women.png`) shows the diabetes-status distribution in this cohort: the large majority report no diabetes, a smaller fraction report diabetes, and prediabetes is comparatively rare. This imbalance is the dominant statistical context for all subsequent metrics. Models that predict “no diabetes” almost everywhere can still achieve deceptively high accuracy; therefore we emphasize macro-averaged scores and class-wise confusion.
 
-## B. Traditional Machine Learning Performance
+## B. Master Experiment Table and W&B Traceability
+
+All runs—including feature ablations, classical baselines/tunings, and MLP architecture variants—are recorded in `report/experiment_results/experiment_table.csv` and mirrored by offline W&B runs under `wandb/`. Each row includes `run_id`, stage, approach, hyperparameters (JSON), stratified split sizes, accuracy, macro precision/recall/F1, OvR ROC–AUC, and a short observation explaining what changed relative to the previous stage. This section summarizes that table; another researcher can regenerate it via `python scripts/run_experiments.py` with `WANDB_MODE=offline`.
+
+## C. Traditional Machine Learning Performance
 
 Table I summarizes test-set metrics for baseline and tuned scikit-learn models from the controlled experiment run.
 

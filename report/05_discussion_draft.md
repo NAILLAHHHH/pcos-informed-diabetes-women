@@ -1,39 +1,29 @@
-# V. Discussion (IEEE draft)
+# V. Discussion
 
-## A. Interpretation of Model Behavior
+## A. Why Models Diverge: Hyperparameters, Algorithms, and Imbalance
 
-The experimental pattern is coherent: **accuracy-favoring ensembles** (gradient boosting) and **balance-favoring models** (class-weighted forests, logistic regression, class-weighted MLPs) optimize different slices of the same impossibility triangle created by rare prediabetes labels. Declaring macro-F1 as the primary metric makes the tuned random forest the principled traditional winner, even though boosting looks stronger if one only cites accuracy. For a screening-oriented narrative in women’s health, missing intermediate risk states is costly; hence the metric choice is not cosmetic.
+The experimental pattern is coherent once macro-F1—not accuracy—is treated as the decision criterion. **Gradient boosting** maximized accuracy (≈0.86) and OvR AUC (≈0.80) by concentrating correct predictions on the dominant “no diabetes” class, which lowers macro-recall. **Class-weighted random forests** sacrificed some accuracy to recover minority recall, winning macro-F1. **Logistic regression** with balanced weights behaved similarly to a high-recall linear separator: lower accuracy, stronger macro-recall. Among MLPs, the **lighter 64–32 network** beat wider variants, consistent with capacity control under noisy, imbalanced survey labels: extra width mainly fits majority patterns before early stopping restores a similar validation loss.
 
-Deep learning’s failure to clearly surpass trees should not be read as a failure of the DL implementation. The input representation is a modest set of questionnaire-derived numerics. In that regime, inductive biases of axis-aligned ensembles are often well matched to the data-generating process, whereas MLPs must rediscover interactions through optimization under heavy class imbalance. The lighter MLP’s relative success among neural variants further suggests that regularization and calibration to minority recall matter more here than width.
+These outcomes match tabular-learning literature: gradient-boosted trees and forests remain formidable on heterogeneous tables, and MLPs are competitive but not automatically superior [13], [14]. They also echo BRFSS diabetes studies where high AUC coexists with limited sensitivity unless the metric/threshold explicitly prioritizes minority detection [7], [8].
 
-## B. What the PCOS Framing Does—and Does Not—Buy
+## B. Learning Curves, Overfitting, and Bias–Variance
 
-The PCOS-informed framing is valuable as **scientific motivation and interpretive lens**. It justifies studying women specifically, highlights metabolic composites, and connects errors to a real clinical discourse about insulin resistance. It does **not** authorize causal claims about PCOS, personalized PCOS risk scores, or diagnostic substitution for endocrine evaluation. Any reader conflating “PCOS-informed” with “PCOS-labeled” would misread both the dataset and the ethics of the work; the manuscript therefore repeats the authenticity statement across Introduction, Methodology, and Discussion.
+The random-forest learning curve (Fig. 4) shows macro-F1 rising with training size while a gap remains between training and cross-validation scores. That pattern indicates **variance plus irreducible label noise**, not pure underfitting: additional data helps, but self-report prediabetes labels and feature ceilings bound performance. Deep-learning training curves (Fig. 6) show validation loss plateauing and triggering early stopping; train/validation accuracy diverge modestly rather than catastrophically, suggesting regularization (dropout, weight decay, class weights) constrained overfitting. In bias–variance terms, boosting appears **low-bias/high-majority-fit**, while class-weighted forests/MLPs accept higher majority error to reduce minority bias—trading global accuracy for balanced risk.
 
-## C. Dataset Limitations
+## C. Confusion Matrices and Clinically Meaningful Errors
 
-Several limitations bound external validity:
+Confusion matrices for the best forest and best MLP (Figs. 2 and 5) concentrate errors on the **prediabetes** row/column. Prediabetes is rare, clinically intermediate, and likely the noisiest self-report category in BRFSS. Adjacent-state confusions (prediabetes ↔ no diabetes) dominate; diabetes versus no-diabetes separation is stronger when `MetabolicBurden` and BMI are elevated (see `error_analysis_by_class.csv`). For a screening-oriented women’s-health narrative, false negatives on intermediate risk are costlier than extra false positives on the majority class—hence macro-F1 and recall-oriented discussion rather than accuracy championship.
 
-1. **Self-report diabetes labels** may disagree with laboratory diagnosis; prediabetes is especially vulnerable to under-ascertainment.
-2. **No PCOS field** prevents direct estimation of PCOS-conditional diabetes risk.
-3. **Cross-sectional survey design** precludes incidence modeling and treatment-effect claims.
-4. **Feature ceiling**: absent labs (HbA1c, fasting glucose), medications, and reproductive endocrine markers, model discrimination has a structural upper bound.
-5. **Geographic/temporal scope**: BRFSS 2015 U.S. adults may not transfer to other countries, care systems, or post-pandemic behavioral baselines.
+ROC OvR curves reinforce the same story: diabetes-versus-rest ranks more easily than prediabetes-versus-rest. Application context therefore favors reporting **class-wise** metrics and cautioning against deployment as a diagnostic tool.
 
-These limits explain why macro-F1 values in the mid‑0.4 range can still be experimentally meaningful: they reflect hard minority recognition under noisy labels, not merely weak modeling.
+## D. Feature Engineering Ablation
 
-## D. Ethical and Practical Considerations
+Comparing logistic regression with and without engineered metabolic composites (experiment table, ablation stage) tests whether PCOS-motivated features add signal beyond raw indicators. In our runs the macro-F1 difference was **near-null** (≈0.4305 without vs ≈0.4295 with engineered features), indicating that linear models already capture much of the same cardiometabolic information through raw BMI, blood pressure, and cholesterol. We retain the composites for **interpretability and literature alignment** [1]–[5] and for nonlinear models that can exploit interactions, while openly reporting the ablation rather than claiming performance magic.
 
-Population-scale classifiers can reinforce surveillance or stigmatization if deployed carelessly. The present artifacts are educational and analytical; they are not cleared clinical decision support. Fairness audits beyond sex filtering (race/ethnicity, income, education) remain future work. Transparency about missing PCOS labels is itself an ethical practice against overselling women’s-health AI.
+## E. Dataset Limitations and Authenticity
 
-## E. Implications for the ML vs. DL Requirement
+Self-report diabetes labels may disagree with laboratory diagnosis; BRFSS lacks HbA1c, fasting glucose, medications, and **PCOS diagnosis fields** [6]. Cross-sectional design precludes incidence modeling. U.S. 2015 adults may not transfer internationally or temporally. These limits explain mid-0.4 macro-F1 values without indicting the pipeline: the task is intrinsically hard under survey noise and severe imbalance.
 
-Meeting the assignment’s dual-paradigm mandate does not require DL superiority. The pedagogically stronger result is comparative honesty: both paradigms were implemented with appropriate tooling (`Pipeline` + search; Keras Functional API + `tf.data`), evaluated under shared splits, and interpreted against dataset constraints. That is a more scholarly outcome than forcing a neural network to “win” through metric shopping.
+## F. Ethics and Practical Artifact Hygiene
 
-## F. Practical Deployment Notes
-
-Even as an academic deliverable, artifact hygiene matters. An unconstrained forest serialized to hundreds of megabytes is awkward for sharing and versioning; the compact forest retained nearly identical macro-F1 with an order-of-magnitude smaller file. Likewise, storing the DL scaler beside the `.keras` file is essential for correct inference. These engineering details rarely appear in accuracy tables, yet they determine whether collaborators can actually reproduce predictions from the Drive folder.
-
-## G. Toward Stronger Future Designs
-
-If a future study obtained linked EHR data with confirmed PCOS codes, oral glucose tolerance results, and medication history, the same dual-paradigm template could be reapplied with a sharper scientific question: short-term conversion from euglycemia to dysglycemia among women with PCOS, or differential calibration of risk scores by PCOS status. Until such labels exist in an open, sufficiently large table, authentic projects should prefer honest women’s diabetes classification over synthetic PCOS fabrication.
+Artifacts are educational, not clinical decision support. Transparency about missing PCOS labels is an ethical requirement against overselling women’s-health AI. Compact model serialization for Drive delivery preserves nearly identical macro-F1 at practical file sizes—an engineering detail that affects reproducibility as much as accuracy tables.

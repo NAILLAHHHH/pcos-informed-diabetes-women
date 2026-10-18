@@ -4,6 +4,7 @@ data/raw/*
 data/processed/*
 !data/processed/.gitkeep
 *.csv
+!report/experiment_results/*.csv
 *.zip
 *.parquet
 *.xlsx
@@ -15,6 +16,8 @@ models/*
 *.joblib
 *.h5
 *.keras
+*_local_only.joblib
+best_traditional_ml_full_local_only.joblib
 saved_model/
 *.pb
 
@@ -39,6 +42,10 @@ env/
 .idea/
 .vscode/
 *.swp
+
+# W&B local offline runs (large; keep experiment_table.csv in git)
+wandb/
+*/wandb/
 
 # Local Drive packages (contain dataset/models)
 deliverables/

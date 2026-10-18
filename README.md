@@ -59,11 +59,17 @@ pcos-informed-diabetes-women/
 
 ## Methods (high level)
 
-1. **EDA & filtering** — female subset; class imbalance inspection; leakage checks.
-2. **Feature engineering** — metabolic risk composites aligned with PCOS-related pathways (documented, not invented PCOS labels).
-3. **Traditional ML** — Logistic Regression, Random Forest, Gradient Boosting, SVM (or LinearSVC for scale); hyperparameter search; learning curves.
-4. **Deep learning** — Keras Sequential/Functional MLP; `tf.data` pipelines; early stopping / regularization; architecture & LR experiments.
-5. **Evaluation** — accuracy, macro-F1, precision/recall, confusion matrices, ROC-AUC (OvR), learning curves, error analysis.
+1. **EDA & filtering** — female subset; missingness/outlier audit; class imbalance inspection.
+2. **Feature engineering** — metabolic risk composites (+ ablation vs baseline features).
+3. **Traditional ML** — Logistic Regression, Random Forest, Gradient Boosting; hyperparameter search; learning curves.
+4. **Deep learning** — Keras Functional MLP; `tf.data`; early stopping / class weights; architecture search.
+5. **Evaluation** — macro-F1, precision/recall, confusion matrices, ROC-AUC (OvR), learning curves, error analysis.
+6. **Experiment tracking** — W&B **offline** logs + `report/experiment_results/experiment_table.csv`.
+
+```bash
+export WANDB_MODE=offline
+python scripts/run_experiments.py
+```
 
 ## Deliverables checklist
 

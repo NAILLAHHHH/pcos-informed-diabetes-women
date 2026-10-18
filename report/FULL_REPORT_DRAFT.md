@@ -1,9 +1,12 @@
 ---
-IEEE-style manuscript draft (paste into Word/LaTeX; polish citations)
-**Required header links — replace before submission**
+# PCOS-Informed Multi-Class Diabetes Classification in Women Using BRFSS Health Indicators
+
+**Required header links**
 - GitHub repository: https://github.com/NAILLAHHHH/pcos-informed-diabetes-women
 - Google Drive folder: `TODO`
-- Presentation video: `TODO`
+- Presentation video: `TODO` (script: `report/VIDEO_SCRIPT.md`)
+
+**Artifacts:** `figures/` · `report/experiment_results/experiment_table.csv` · offline W&B under `wandb/`
 ---
 
 # Introduction (IEEE draft)
@@ -17,7 +20,7 @@ IEEE-style manuscript draft (paste into Word/LaTeX; polish citations)
 
 ---
 
-Diabetes mellitus remains one of the most consequential non-communicable diseases worldwide, with rising prevalence, substantial healthcare costs, and well-documented disparities by sex, age, and metabolic risk profile. Among women, endocrine and metabolic conditions further shape diabetes risk across the life course. Polycystic ovary syndrome (PCOS) is the most common endocrine disorder of reproductive-age women and is strongly associated with insulin resistance, impaired glucose tolerance, and subsequent Type 2 diabetes. That clinical relationship motivates the present study: if metabolic risk accumulates along pathways that overlap with the PCOS phenotype, then carefully designed machine learning (ML) and deep learning (DL) models applied to large population health surveys may help characterize diabetes status in women and illuminate which routinely collected indicators carry signal.
+Diabetes mellitus remains one of the most consequential non-communicable diseases worldwide, with rising prevalence, substantial healthcare costs, and well-documented disparities by sex, age, and metabolic risk profile. Among women, endocrine and metabolic conditions further shape diabetes risk across the life course. Polycystic ovary syndrome (PCOS) is the most common endocrine disorder of reproductive-age women and is strongly associated with insulin resistance, impaired glucose tolerance, and subsequent Type 2 diabetes [1]–[5]. That clinical relationship motivates the present study: if metabolic risk accumulates along pathways that overlap with the PCOS phenotype, then carefully designed machine learning (ML) and deep learning (DL) models applied to large population health surveys may help characterize diabetes status in women and illuminate which routinely collected indicators carry signal [6]–[10].
 
 At the same time, scholarly and pedagogical integrity require a clear separation between *motivation* and *measurement*. Most publicly available PCOS-specific clinical tables are small—often hundreds to a few thousand records—and therefore fail minimum sample-size expectations for rigorous comparative modeling. Large government survey systems such as the U.S. Centers for Disease Control and Prevention (CDC) Behavioral Risk Factor Surveillance System (BRFSS) contain hundreds of thousands of adult responses and include diabetes history alongside cardiometabolic and lifestyle indicators, yet they do not typically record a confirmed PCOS diagnosis. Accordingly, this project does **not** claim to detect PCOS, invent PCOS labels, or estimate PCOS-conditional diabetes risk from unavailable fields. Instead, we define an authentic classification task grounded in observed BRFSS labels: predict multi-class diabetes status—no diabetes, prediabetes, or diabetes—among female respondents, while interpreting features and errors in light of the PCOS–diabetes literature.
 
@@ -29,44 +32,31 @@ The contributions of this work are fourfold. First, we formulate an assignment-c
 
 The remainder of the report is organized as follows. Section II reviews related work on PCOS–diabetes epidemiology and computational approaches to diabetes risk prediction from survey and clinical data. Section III details the dataset, cohort definition, preprocessing, model architectures, training procedures, and evaluation design. Section IV presents experimental results for traditional and deep models. Section V discusses implications, failure modes, and limitations. Section VI concludes and outlines directions for future work, including linkage to clinical registries that actually record PCOS status.
 
-# II. Literature Review (IEEE draft)
+# II. Literature Review
 
-## A. PCOS and Diabetes Risk in Women
+## A. PCOS, Insulin Resistance, and Type 2 Diabetes
 
-Polycystic ovary syndrome (PCOS) is a heterogeneous endocrine disorder characterized by ovulatory dysfunction, hyperandrogenism, and/or polycystic ovarian morphology. Beyond reproductive morbidity, PCOS is tightly linked to metabolic disease. Multiple epidemiological syntheses report elevated rates of insulin resistance, impaired glucose tolerance, and Type 2 diabetes mellitus among women with PCOS relative to age- and BMI-comparable controls [1], [2]. Proposed mechanisms include androgen excess, visceral adiposity, chronic low-grade inflammation, and disrupted insulin signaling. Clinical guidance therefore often recommends earlier and more frequent glycemic screening in this population [3].
+Polycystic ovary syndrome (PCOS) is the most common endocrine disorder among reproductive-age women and is tightly coupled to metabolic dysfunction. Using gold-standard euglycaemic–hyperinsulinaemic clamp studies, Cassar *et al.* reported that insulin sensitivity is approximately 27% lower in women with PCOS than in controls, with higher body-mass index (BMI) further worsening insulin resistance [1]. Observational meta-analyses likewise estimate roughly a threefold elevation in type 2 diabetes (T2D) risk among women with PCOS, with obesity amplifying that risk [2]. Foundational physiologic work demonstrated profound peripheral insulin resistance in PCOS independent of obesity [3], and Legro *et al.* documented high rates of impaired glucose tolerance and undiagnosed diabetes in PCOS cohorts, motivating earlier glycemic assessment [4]. International evidence-based guidelines accordingly recommend assessing glycemic status at PCOS diagnosis and reassessing periodically, preferring oral glucose tolerance testing in higher-risk women [5].
 
-Importantly for computational work, the PCOS–diabetes association is not reducible to a single biomarker. Risk concentrates among women who also exhibit cardiometabolic features—elevated body mass index (BMI), hypertension, dyslipidemia, and low physical activity—that are routinely captured in population surveys even when PCOS itself is not. This creates a methodological opportunity: large public health datasets can support women’s diabetes classification models whose feature space overlaps pathways emphasized in PCOS research, provided authors do not over-claim PCOS detection from missing labels.
+These findings matter for machine learning because they identify a **women’s metabolic phenotype**—elevated BMI, hypertension, dyslipidemia, and inactivity—that is both clinically salient in PCOS and measurable in population surveys even when PCOS diagnoses are unavailable. The present project therefore treats PCOS–diabetes epidemiology as theoretical grounding and interpretive context, not as a claim that BRFSS contains PCOS labels.
 
-## B. Population Surveys and Diabetes Prediction
+## B. BRFSS and Computational Diabetes Risk Modeling
 
-The CDC Behavioral Risk Factor Surveillance System (BRFSS) is a long-running telephone survey of U.S. adults that records self-reported chronic conditions, preventive behaviors, and sociodemographic factors [4]. Cleaned derivatives of BRFSS diabetes modules have become common benchmarks for tabular classification, including binary and three-class diabetes outcomes with features such as blood pressure, cholesterol, BMI, general health, and lifestyle indicators [5]. Strengths include scale (hundreds of thousands of rows), open access, and demographic breadth. Limitations are equally structural: self-report error, limited laboratory confirmation, coarse age bands, and absence of many clinical endocrinology variables (including PCOS diagnosis, androgen panels, and oral glucose tolerance results).
+The U.S. Centers for Disease Control and Prevention (CDC) Behavioral Risk Factor Surveillance System (BRFSS) is a large, ongoing telephone survey of adult health behaviors and chronic conditions [6]. Xie *et al.* built multiple classifiers on 2014 BRFSS data for type 2 diabetes risk prediction, reporting AUCs from about 0.72 to 0.79 and noting that high overall accuracy can coexist with limited sensitivity—an imbalance-aware evaluation lesson directly relevant here [7]. Subsequent BRFSS studies continue to show strong tree-ensemble performance and emphasize class imbalance, self-report labels, and the limits of cross-sectional prediction [8], [9]. Cleaned BRFSS 2015 diabetes-indicator releases used widely in open ML practice provide a reproducible tabular benchmark with hundreds of thousands of rows [10].
 
-Prior ML studies on BRFSS-style diabetes indicators frequently report high overall accuracy that is driven by majority-class “no diabetes” predictions, with weaker minority-class performance for prediabetes [5], [6]. That pattern motivates evaluation designs centered on macro-averaged F1, precision/recall, and ROC–AUC rather than accuracy alone—especially in women’s health analyses where under-detection of intermediate risk states has screening implications.
+A recurring gap in this literature is **sex-specific framing**: many notebooks pool sexes and optimize accuracy, under-discussing women’s endocrine context. Few open assignments simultaneously (i) restrict to women, (ii) keep multi-class glycemic labels including prediabetes, and (iii) refuse to fabricate PCOS labels while still engaging PCOS scholarship. That gap is the niche this project occupies.
 
-## C. Traditional Machine Learning for Tabular Health Data
+## C. Classical Machine Learning for Tabular Health Data
 
-Logistic regression remains a transparent baseline for multi-class health outcomes and provides calibrated linear decision boundaries when features are standardized. Ensemble tree methods—random forests and gradient boosting—often dominate tabular biomedical prediction because they capture nonlinear interactions and mixed discrete/continuous encodings without heavy architecture search [7], [8]. Support vector machines can be competitive after scaling, though linear formulations are typically preferred at BRFSS scale for computational tractability. Across these families, class weighting, stratified resampling, and hyperparameter search are standard responses to imbalance.
+Logistic regression remains a transparent multi-class baseline under standardized features. Ensemble methods—random forests [11] and gradient boosting machines [12]—are strong default learners for mixed discrete/continuous clinical tables because they capture nonlinear interactions with limited preprocessing. In BRFSS diabetes tasks, tree ensembles frequently lead accuracy/AUC tables while linear models remain useful for calibrated, interpretable baselines [7], [8]. Support vector machines are competitive after scaling but can be costly at full BRFSS scale; linear SVM variants are the practical compromise.
 
-## D. Deep Learning on Tabular Clinical/Survey Features
+## D. Deep Learning on Tabular Data: Promise and Limits
 
-Deep neural networks have transformed imaging and sequence tasks, yet their advantage on medium-dimensional tabular survey data is less consistent. Multilayer perceptrons (MLPs) with regularization, batch normalization, and class-weighted losses can match strong tree baselines, but gains are often modest when inputs are sparse questionnaire encodings rather than rich sensor or EHR timelines [9], [10]. Modern training stacks (TensorFlow/Keras with `tf.data`) improve throughput and reproducibility for large row counts, while early stopping and learning-rate schedules reduce overfitting to majority classes. Comparative studies therefore treat DL not as an automatic upgrade but as a second paradigm whose value must be demonstrated under identical splits and metrics.
+Despite neural networks’ success in vision and language, tabular deep learning remains contested. Borisov *et al.* survey deep models for heterogeneous tables and find gradient-boosted trees still usually outperform neural nets on supervised tabular tasks [13]. Gorishniy *et al.* raise strong neural baselines (ResNet-like MLPs and Transformers) yet conclude there is still no universally superior family versus gradient-boosted decision trees [14]. These results justify implementing Keras MLPs with `tf.data` for the assignment’s deep-learning requirement while **predicting** that carefully tuned forests/boosting may match or beat MLPs on BRFSS indicators—exactly the comparative hypothesis tested in Section IV.
 
-## E. Positioning of the Present Study
+## E. Synthesis and Project Positioning
 
-This project sits at the intersection of women’s metabolic health and reproducible ML pedagogy. Unlike PCOS ultrasound or small clinic tables, our corpus satisfies large-sample requirements via BRFSS-derived indicators. Unlike generic diabetes notebooks that ignore sex-specific framing, we restrict the cohort to women and interpret engineered metabolic features through the PCOS–diabetes literature. Unlike studies that conflate motivation with labels, we explicitly state that PCOS status is unavailable. The empirical contribution is a controlled comparison of scikit-learn ensembles/linear models against Keras MLPs for three-class diabetes status in women, accompanied by learning-curve and error analyses that foreground dataset ceilings.
-
-## References (seed list — expand/verify in final bibliography)
-
-[1] R. S. Legro et al., related PCOS metabolic reviews / Endocrine Society guidance (replace with exact citation).  
-[2] Peer-reviewed meta-analyses on PCOS and Type 2 diabetes risk (insert DOI).  
-[3] Clinical screening recommendations for glycemic testing in PCOS.  
-[4] CDC BRFSS overview and 2015 data documentation.  
-[5] A. Teboul (curator), Diabetes Health Indicators Dataset (BRFSS 2015 cleaned release), Kaggle.  
-[6] Prior BRFSS diabetes classification studies emphasizing class imbalance.  
-[7] L. Breiman, “Random Forests,” *Machine Learning*, 2001.  
-[8] J. H. Friedman, “Greedy Function Approximation: A Gradient Boosting Machine,” *Annals of Statistics*, 2001.  
-[9] Surveys on deep learning for tabular data (e.g., comparative MLP vs. GBDT discussions).  
-[10] TensorFlow/`tf.data` pipeline guidance for scalable input pipelines.
+Across clinical and computational literatures, three tensions recur: (1) PCOS elevates diabetes risk through insulin resistance and obesity pathways [1]–[5]; (2) BRFSS enables large-scale modeling but lacks endocrine labels and laboratory confirmation [6]–[10]; (3) deep learning is not automatically better than classical ensembles on survey tables [13], [14]. This project addresses those tensions by defining an authentic women’s multi-class diabetes task, engineering metabolic composites aligned with PCOS pathways without inventing diagnoses, and comparing scikit-learn models to TensorFlow/Keras MLPs under imbalance-aware metrics with offline experiment logging.
 
 # III. Methodology (IEEE draft)
 
@@ -84,13 +74,15 @@ Class prevalence in the women cohort remains heavily skewed toward no diabetes, 
 
 ## C. Preprocessing and Feature Engineering
 
-Missingness in the cleaned indicators release is already limited; we validate required columns at load time and abort if the schema drifts. Features are cast to numeric types for modeling. We construct three transparent composites:
+We begin with an automated **data-quality audit** (`diagnose_data_quality`) that records missingness, dtypes, and unique-value counts for every column, plus BMI quantile and outlier flags. Although the cleaned BRFSS indicators release is largely complete, we still **drop rows with missing targets or required predictors** and **clip BMI** to a plausible survey range \([12, 60]\) to limit extreme coding artifacts while preserving ordinal/binary questionnaire fields. Tukey IQR fences for BMI are reported for transparency even when clinical clipping is the applied transform. All steps are serialized to `report/experiment_results/data_quality_audit.csv` and `cleaning_report.json` for replication.
+
+Features are cast to numeric types for modeling. We construct three transparent composites:
 
 1. **MetabolicBurden** — sum of high blood pressure, high cholesterol, and obesity indicator (\(\mathrm{BMI}\ge 30\)).
 2. **LifestyleRisk** — combination of physical inactivity and scaled general-health score.
 3. **BMI_x_HighBP** — interaction between BMI and hypertension.
 
-These fields are motivated by cardiometabolic patterns frequently discussed in PCOS–diabetes research; they are **not** surrogate PCOS labels. The final feature matrix uses the original indicators plus the three engineered columns (\(d=23\) in the reported runs).
+These fields are motivated by cardiometabolic patterns frequently discussed in PCOS–diabetes research [1]–[5]; they are **not** surrogate PCOS labels. The final feature matrix uses the original indicators plus the three engineered columns (\(d=23\) in the reported runs). An **ablation** comparing logistic regression with and without engineered features is logged in the experiment table to justify retention empirically rather than by narrative alone.
 
 We apply stratified splits: 70% train, 15% validation, 15% test (implemented as a 15% test holdout from the full cohort, then a validation fraction from the remainder), with `random_state=42`. Continuous scaling via `StandardScaler` is fit on the training partition only and applied to validation/test. Tree models can tolerate unscaled inputs, but a shared scaled representation keeps linear models and neural networks comparable; pipelines encapsulate scaling for scikit-learn estimators.
 
@@ -121,9 +113,9 @@ Minibatches are assembled with `tf.data.Dataset.from_tensor_slices`, optional sh
 
 Primary selection metric: **macro-F1**. Secondary metrics: accuracy, macro precision/recall, and **macro one-versus-rest ROC–AUC**. We report confusion matrices for best traditional and best deep models, ROC curves per class, random-forest learning curves (macro-F1 versus training size), and neural training/validation loss–accuracy trajectories. Error analysis stratifies mistakes by true class and examines metabolic-feature means among errors to connect quantitative failures to clinical interpretability.
 
-## G. Reproducibility and Artifact Handling
+## G. Reproducibility, W&B Offline Logs, and Artifact Handling
 
-Code is organized as importable modules under `src/` plus a documented Jupyter notebook and a batch runner (`scripts/run_experiments.py`). Dependencies are pinned in spirit via `requirements.txt`. Raw CSVs and model binaries are gitignored; the assignment’s Google Drive folder stores (i) the zipped raw dataset, (ii) the best traditional model (`.joblib`), and (iii) the best Keras model (`.keras`) with its scaler. Random seeds are fixed where libraries allow (`random_state=42`, Keras seed utility).
+Code is organized as importable modules under `src/` plus a documented Jupyter notebook and a batch runner (`scripts/run_experiments.py`). Dependencies are listed in `requirements.txt` (including `wandb`). Every experimental run is logged with **Weights & Biases in offline mode** (`WANDB_MODE=offline`), writing local run directories under `wandb/` and appending a row to `report/experiment_results/experiment_table.csv` with model name, hyperparameters, split sizes, metrics, and a short observation. TensorBoard-style epoch curves for MLPs are also captured via W&B step logs of train/val loss and accuracy. Raw CSVs and model binaries are gitignored; the Google Drive folder stores the zipped raw dataset and best model weights. Random seeds are fixed (`random_state=42`, Keras seed utility).
 
 # IV. Results (IEEE draft)
 
@@ -133,7 +125,11 @@ Figures referenced below are generated in `figures/` by the experimental pipelin
 
 The raw BRFSS-derived table contains 253,680 adults. Restricting to women yields 141,974 respondents. Fig. 1 (`class_balance_women.png`) shows the diabetes-status distribution in this cohort: the large majority report no diabetes, a smaller fraction report diabetes, and prediabetes is comparatively rare. This imbalance is the dominant statistical context for all subsequent metrics. Models that predict “no diabetes” almost everywhere can still achieve deceptively high accuracy; therefore we emphasize macro-averaged scores and class-wise confusion.
 
-## B. Traditional Machine Learning Performance
+## B. Master Experiment Table and W&B Traceability
+
+All runs—including feature ablations, classical baselines/tunings, and MLP architecture variants—are recorded in `report/experiment_results/experiment_table.csv` and mirrored by offline W&B runs under `wandb/`. Each row includes `run_id`, stage, approach, hyperparameters (JSON), stratified split sizes, accuracy, macro precision/recall/F1, OvR ROC–AUC, and a short observation explaining what changed relative to the previous stage. This section summarizes that table; another researcher can regenerate it via `python scripts/run_experiments.py` with `WANDB_MODE=offline`.
+
+## C. Traditional Machine Learning Performance
 
 Table I summarizes test-set metrics for baseline and tuned scikit-learn models from the controlled experiment run.
 
@@ -189,45 +185,35 @@ For Google Drive delivery, the winning forest family was re-tuned under depth an
 
 Across models, prediabetes is the hardest class: it is rare, clinically intermediate, and likely the noisiest self-report category. Confusions between prediabetes and no-diabetes dominate minority errors, whereas diabetes versus no-diabetes separation is comparatively stronger when cardiometabolic burden features are elevated. Mean `MetabolicBurden` increases across true glycemic severity in the test slice, supporting the face validity of the engineered features even when discrete classification of the middle class remains difficult.
 
-# V. Discussion (IEEE draft)
+# V. Discussion
 
-## A. Interpretation of Model Behavior
+## A. Why Models Diverge: Hyperparameters, Algorithms, and Imbalance
 
-The experimental pattern is coherent: **accuracy-favoring ensembles** (gradient boosting) and **balance-favoring models** (class-weighted forests, logistic regression, class-weighted MLPs) optimize different slices of the same impossibility triangle created by rare prediabetes labels. Declaring macro-F1 as the primary metric makes the tuned random forest the principled traditional winner, even though boosting looks stronger if one only cites accuracy. For a screening-oriented narrative in women’s health, missing intermediate risk states is costly; hence the metric choice is not cosmetic.
+The experimental pattern is coherent once macro-F1—not accuracy—is treated as the decision criterion. **Gradient boosting** maximized accuracy (≈0.86) and OvR AUC (≈0.80) by concentrating correct predictions on the dominant “no diabetes” class, which lowers macro-recall. **Class-weighted random forests** sacrificed some accuracy to recover minority recall, winning macro-F1. **Logistic regression** with balanced weights behaved similarly to a high-recall linear separator: lower accuracy, stronger macro-recall. Among MLPs, the **lighter 64–32 network** beat wider variants, consistent with capacity control under noisy, imbalanced survey labels: extra width mainly fits majority patterns before early stopping restores a similar validation loss.
 
-Deep learning’s failure to clearly surpass trees should not be read as a failure of the DL implementation. The input representation is a modest set of questionnaire-derived numerics. In that regime, inductive biases of axis-aligned ensembles are often well matched to the data-generating process, whereas MLPs must rediscover interactions through optimization under heavy class imbalance. The lighter MLP’s relative success among neural variants further suggests that regularization and calibration to minority recall matter more here than width.
+These outcomes match tabular-learning literature: gradient-boosted trees and forests remain formidable on heterogeneous tables, and MLPs are competitive but not automatically superior [13], [14]. They also echo BRFSS diabetes studies where high AUC coexists with limited sensitivity unless the metric/threshold explicitly prioritizes minority detection [7], [8].
 
-## B. What the PCOS Framing Does—and Does Not—Buy
+## B. Learning Curves, Overfitting, and Bias–Variance
 
-The PCOS-informed framing is valuable as **scientific motivation and interpretive lens**. It justifies studying women specifically, highlights metabolic composites, and connects errors to a real clinical discourse about insulin resistance. It does **not** authorize causal claims about PCOS, personalized PCOS risk scores, or diagnostic substitution for endocrine evaluation. Any reader conflating “PCOS-informed” with “PCOS-labeled” would misread both the dataset and the ethics of the work; the manuscript therefore repeats the authenticity statement across Introduction, Methodology, and Discussion.
+The random-forest learning curve (Fig. 4) shows macro-F1 rising with training size while a gap remains between training and cross-validation scores. That pattern indicates **variance plus irreducible label noise**, not pure underfitting: additional data helps, but self-report prediabetes labels and feature ceilings bound performance. Deep-learning training curves (Fig. 6) show validation loss plateauing and triggering early stopping; train/validation accuracy diverge modestly rather than catastrophically, suggesting regularization (dropout, weight decay, class weights) constrained overfitting. In bias–variance terms, boosting appears **low-bias/high-majority-fit**, while class-weighted forests/MLPs accept higher majority error to reduce minority bias—trading global accuracy for balanced risk.
 
-## C. Dataset Limitations
+## C. Confusion Matrices and Clinically Meaningful Errors
 
-Several limitations bound external validity:
+Confusion matrices for the best forest and best MLP (Figs. 2 and 5) concentrate errors on the **prediabetes** row/column. Prediabetes is rare, clinically intermediate, and likely the noisiest self-report category in BRFSS. Adjacent-state confusions (prediabetes ↔ no diabetes) dominate; diabetes versus no-diabetes separation is stronger when `MetabolicBurden` and BMI are elevated (see `error_analysis_by_class.csv`). For a screening-oriented women’s-health narrative, false negatives on intermediate risk are costlier than extra false positives on the majority class—hence macro-F1 and recall-oriented discussion rather than accuracy championship.
 
-1. **Self-report diabetes labels** may disagree with laboratory diagnosis; prediabetes is especially vulnerable to under-ascertainment.
-2. **No PCOS field** prevents direct estimation of PCOS-conditional diabetes risk.
-3. **Cross-sectional survey design** precludes incidence modeling and treatment-effect claims.
-4. **Feature ceiling**: absent labs (HbA1c, fasting glucose), medications, and reproductive endocrine markers, model discrimination has a structural upper bound.
-5. **Geographic/temporal scope**: BRFSS 2015 U.S. adults may not transfer to other countries, care systems, or post-pandemic behavioral baselines.
+ROC OvR curves reinforce the same story: diabetes-versus-rest ranks more easily than prediabetes-versus-rest. Application context therefore favors reporting **class-wise** metrics and cautioning against deployment as a diagnostic tool.
 
-These limits explain why macro-F1 values in the mid‑0.4 range can still be experimentally meaningful: they reflect hard minority recognition under noisy labels, not merely weak modeling.
+## D. Feature Engineering Ablation
 
-## D. Ethical and Practical Considerations
+Comparing logistic regression with and without engineered metabolic composites (experiment table, ablation stage) tests whether PCOS-motivated features add signal beyond raw indicators. In our runs the macro-F1 difference was **near-null** (≈0.4305 without vs ≈0.4295 with engineered features), indicating that linear models already capture much of the same cardiometabolic information through raw BMI, blood pressure, and cholesterol. We retain the composites for **interpretability and literature alignment** [1]–[5] and for nonlinear models that can exploit interactions, while openly reporting the ablation rather than claiming performance magic.
 
-Population-scale classifiers can reinforce surveillance or stigmatization if deployed carelessly. The present artifacts are educational and analytical; they are not cleared clinical decision support. Fairness audits beyond sex filtering (race/ethnicity, income, education) remain future work. Transparency about missing PCOS labels is itself an ethical practice against overselling women’s-health AI.
+## E. Dataset Limitations and Authenticity
 
-## E. Implications for the ML vs. DL Requirement
+Self-report diabetes labels may disagree with laboratory diagnosis; BRFSS lacks HbA1c, fasting glucose, medications, and **PCOS diagnosis fields** [6]. Cross-sectional design precludes incidence modeling. U.S. 2015 adults may not transfer internationally or temporally. These limits explain mid-0.4 macro-F1 values without indicting the pipeline: the task is intrinsically hard under survey noise and severe imbalance.
 
-Meeting the assignment’s dual-paradigm mandate does not require DL superiority. The pedagogically stronger result is comparative honesty: both paradigms were implemented with appropriate tooling (`Pipeline` + search; Keras Functional API + `tf.data`), evaluated under shared splits, and interpreted against dataset constraints. That is a more scholarly outcome than forcing a neural network to “win” through metric shopping.
+## F. Ethics and Practical Artifact Hygiene
 
-## F. Practical Deployment Notes
-
-Even as an academic deliverable, artifact hygiene matters. An unconstrained forest serialized to hundreds of megabytes is awkward for sharing and versioning; the compact forest retained nearly identical macro-F1 with an order-of-magnitude smaller file. Likewise, storing the DL scaler beside the `.keras` file is essential for correct inference. These engineering details rarely appear in accuracy tables, yet they determine whether collaborators can actually reproduce predictions from the Drive folder.
-
-## G. Toward Stronger Future Designs
-
-If a future study obtained linked EHR data with confirmed PCOS codes, oral glucose tolerance results, and medication history, the same dual-paradigm template could be reapplied with a sharper scientific question: short-term conversion from euglycemia to dysglycemia among women with PCOS, or differential calibration of risk scores by PCOS status. Until such labels exist in an open, sufficiently large table, authentic projects should prefer honest women’s diabetes classification over synthetic PCOS fabrication.
+Artifacts are educational, not clinical decision support. Transparency about missing PCOS labels is an ethical requirement against overselling women’s-health AI. Compact model serialization for Drive delivery preserves nearly identical macro-F1 at practical file sizes—an engineering detail that affects reproducibility as much as accuracy tables.
 
 # VI. Conclusion (IEEE draft)
 
@@ -239,23 +225,32 @@ The comparative lesson is clear: for medium-width tabular survey features, caref
 
 Future work should seek clinically linked datasets that record both glycemic outcomes and confirmed PCOS status, incorporate laboratory biomarkers, and extend fairness evaluation across intersecting social determinants—while preserving the same discipline about what labels do and do not exist. Until then, PCOS-informed diabetes classification in women on open BRFSS indicators remains a rigorous, honest, and instructive benchmark for contrasting traditional machine learning with deep learning.
 
-## Appendix A — Compact deployment forest (Drive artifact)
+# References (IEEE)
 
-- Params: n_estimators=100, max_depth=14, min_samples_leaf=2, max_features=sqrt
-- Test accuracy / macro-F1 / OvR-AUC: 0.759 / 0.443 / 0.761
-- Artifact ~64 MB `.joblib` (Drive traditional-ML deliverable)
+[1] S. Cassar *et al.*, “Insulin resistance in polycystic ovary syndrome: A systematic review and meta-analysis of euglycaemic–hyperinsulinaemic clamp studies,” *Hum. Reprod.*, vol. 31, no. 11, pp. 2619–2631, Nov. 2016, doi: 10.1093/humrep/dew243.
 
-## Appendix B — Figure file map
+[2] “Risk of type 2 diabetes mellitus in polycystic ovary syndrome is associated with obesity: A meta-analysis of observational studies,” *Endocrine*, vol. 74, no. 2, pp. 245–253, 2021, doi: 10.1007/s12020-021-02801-2.
 
-| Figure | File |
-|--------|------|
-| Class balance | figures/class_balance_women.png |
-| CM traditional | figures/cm_best_traditional.png |
-| ROC traditional | figures/roc_best_traditional.png |
-| Learning curve | figures/learning_curve_rf.png |
-| CM / ROC deep | figures/cm_best_dl.png , figures/roc_best_dl.png |
-| DL curves | figures/dl_training_curves.png |
+[3] A. Dunaif, K. R. Segal, W. Futterweit, and A. Dobrjansky, “Profound peripheral insulin resistance, independent of obesity, in polycystic ovary syndrome,” *Diabetes*, vol. 38, no. 9, pp. 1165–1174, 1989.
 
-## Appendix C — Drive package contents
+[4] R. S. Legro, A. R. Kunselman, W. C. Dodson, and A. Dunaif, “Prevalence and predictors of risk for type 2 diabetes mellitus and impaired glucose tolerance in polycystic ovary syndrome: A prospective, controlled study,” *J. Clin. Endocrinol. Metab.*, vol. 84, no. 1, pp. 165–169, 1999.
 
-Upload `deliverables/google_drive/ML_Summative_Drive_Package.zip` (or the two inner zips) to a folder shared as “Anyone with the link can view”.
+[5] H. J. Teede *et al.*, “Recommendations from the international evidence-based guideline for the assessment and management of polycystic ovary syndrome,” *Hum. Reprod.*, vol. 33, no. 9, pp. 1602–1618, 2018, doi: 10.1093/humrep/dey256.
+
+[6] Centers for Disease Control and Prevention, “Behavioral Risk Factor Surveillance System (BRFSS),” Atlanta, GA, USA. [Online]. Available: https://www.cdc.gov/brfss
+
+[7] Z. Xie, O. Nikolayeva, J. Luo, and D. Li, “Building risk prediction models for type 2 diabetes using machine learning techniques,” *Prev. Chronic Dis.*, vol. 16, E130, 2019, doi: 10.5888/pcd16.190109.
+
+[8] M. M. Chowdhury, R. S. Ayon, and M. S. Hossain, “An investigation of machine learning algorithms and data augmentation techniques for diabetes diagnosis using class imbalanced BRFSS dataset,” *Healthcare Analytics*, vol. 5, Art. no. 100297, 2024, doi: 10.1016/j.health.2023.100297.
+
+[9] “Development and evaluation of machine learning models for diabetes risk prediction using BRFSS 2023 data,” in *Proc. IEEE DASA*, 2025, doi: 10.1109/dasa68193.2025.11498954.
+
+[10] A. Teboul, “Diabetes Health Indicators Dataset (BRFSS 2015),” Kaggle, 2021. [Online]. Available: https://www.kaggle.com/datasets/alexteboul/diabetes-health-indicators-dataset
+
+[11] L. Breiman, “Random forests,” *Mach. Learn.*, vol. 45, no. 1, pp. 5–32, 2001.
+
+[12] J. H. Friedman, “Greedy function approximation: A gradient boosting machine,” *Ann. Statist.*, vol. 29, no. 5, pp. 1189–1232, 2001.
+
+[13] V. Borisov *et al.*, “Deep neural networks and tabular data: A survey,” *IEEE Trans. Neural Netw. Learn. Syst.*, doi: 10.1109/TNNLS.2022.3225573; arXiv:2110.01889.
+
+[14] Y. Gorishniy, I. Rubachev, V. Khrulkov, and A. Babenko, “Revisiting deep learning models for tabular data,” in *Proc. Adv. Neural Inf. Process. Syst. (NeurIPS)*, 2021.
