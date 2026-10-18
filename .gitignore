@@ -50,3 +50,16 @@ wandb/
 # Local Drive packages (contain dataset/models)
 deliverables/
 
+# Student-only helpers (not needed for grading; keep FULL_REPORT + experiment_results)
+report/VIDEO_SCRIPT.md
+report/DRIVE_AND_VIDEO_CHECKLIST.md
+report/REPORT_OUTLINE.md
+report/01_introduction_draft.md
+report/02_literature_review_draft.md
+report/03_methodology_draft.md
+report/04_results_draft.md
+report/05_discussion_draft.md
+report/06_conclusion_draft.md
+report/experiment_results/compact_rf_metrics.txt
+report/experiment_results/run_meta.json
+

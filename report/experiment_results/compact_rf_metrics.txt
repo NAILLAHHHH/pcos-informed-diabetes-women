@@ -1,5 +1,0 @@
-best_params={'clf__n_estimators': 100, 'clf__min_samples_leaf': 2, 'clf__max_features': 'sqrt', 'clf__max_depth': 14}
-accuracy=0.7594027327792647
-macro_f1=0.4432529396068608
-roc_auc_ovr_macro=0.7613339537495639
-size_bytes=66638618
